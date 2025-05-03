@@ -13,6 +13,19 @@ class ErrorIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Cek apakah pesan error berkaitan dengan koneksi internet
+    bool isConnectionError =
+        message.toLowerCase().contains('koneksi') ||
+        message.toLowerCase().contains('internet') ||
+        message.toLowerCase().contains('network') ||
+        message.toLowerCase().contains('socket');
+
+    // Pesan bantuan berdasarkan jenis error
+    String helpMessage =
+        isConnectionError
+            ? 'Pastikan perangkat Anda terhubung ke internet dan coba lagi.'
+            : 'Maaf, terjadi kesalahan. Silakan coba lagi nanti.';
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -35,10 +48,20 @@ class ErrorIndicator extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              message,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w500,
+              isConnectionError
+                  ? 'Tidak Ada Koneksi Internet'
+                  : 'Terjadi Kesalahan',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.error,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              helpMessage,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -60,8 +83,79 @@ class ErrorIndicator extends StatelessWidget {
                   ),
                 ),
               ),
+            if (isConnectionError && onRetry != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: TextButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder:
+                          (context) => AlertDialog(
+                            title: const Text('Bantuan Koneksi'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Langkah yang dapat dilakukan:'),
+                                const SizedBox(height: 8),
+                                _buildHelpItem(
+                                  context,
+                                  '1. Periksa koneksi WiFi atau data seluler Anda',
+                                ),
+                                _buildHelpItem(
+                                  context,
+                                  '2. Mode pesawat tidak aktif',
+                                ),
+                                _buildHelpItem(
+                                  context,
+                                  '3. Coba gunakan jaringan lain jika tersedia',
+                                ),
+                                _buildHelpItem(
+                                  context,
+                                  '4. Restart perangkat jika diperlukan',
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Tutup'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  onRetry!();
+                                },
+                                child: const Text('Coba Lagi'),
+                              ),
+                            ],
+                          ),
+                    );
+                  },
+                  child: const Text('Butuh Bantuan?'),
+                ),
+              ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHelpItem(BuildContext context, String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: 18,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text)),
+        ],
       ),
     );
   }

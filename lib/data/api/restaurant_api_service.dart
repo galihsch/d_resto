@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'package:http/http.dart' as http;
 import '../models/restaurant.dart';
 
@@ -14,11 +15,23 @@ class RestaurantApiService {
       if (response.statusCode == 200) {
         return RestaurantList.fromJson(jsonDecode(response.body));
       } else {
-        throw Exception('Gagal memuat daftar restoran: ${response.statusCode}');
+        throw Exception(
+          'Gagal memuat daftar restoran: Server tidak merespons dengan benar (${response.statusCode})',
+        );
       }
     } catch (e) {
       if (e is SocketException) {
-        throw Exception('Tidak ada koneksi internet');
+        throw Exception(
+          'Tidak ada koneksi internet. Silakan periksa koneksi Anda dan coba lagi.',
+        );
+      } else if (e is HttpException) {
+        throw Exception(
+          'Tidak dapat menemukan layanan. Silakan coba lagi nanti.',
+        );
+      } else if (e is FormatException) {
+        throw Exception('Format data tidak valid. Silakan coba lagi nanti.');
+      } else if (e is TimeoutException) {
+        throw Exception('Waktu koneksi habis. Silakan coba lagi nanti.');
       }
       rethrow;
     }
@@ -30,11 +43,23 @@ class RestaurantApiService {
       if (response.statusCode == 200) {
         return RestaurantDetail.fromJson(jsonDecode(response.body));
       } else {
-        throw Exception('Gagal memuat detail restoran: ${response.statusCode}');
+        throw Exception(
+          'Gagal memuat detail restoran: Server tidak merespons dengan benar (${response.statusCode})',
+        );
       }
     } catch (e) {
       if (e is SocketException) {
-        throw Exception('Tidak ada koneksi internet');
+        throw Exception(
+          'Tidak ada koneksi internet. Silakan periksa koneksi Anda dan coba lagi.',
+        );
+      } else if (e is HttpException) {
+        throw Exception(
+          'Tidak dapat menemukan layanan. Silakan coba lagi nanti.',
+        );
+      } else if (e is FormatException) {
+        throw Exception('Format data tidak valid. Silakan coba lagi nanti.');
+      } else if (e is TimeoutException) {
+        throw Exception('Waktu koneksi habis. Silakan coba lagi nanti.');
       }
       rethrow;
     }
@@ -46,11 +71,23 @@ class RestaurantApiService {
       if (response.statusCode == 200) {
         return SearchRestaurant.fromJson(jsonDecode(response.body));
       } else {
-        throw Exception('Gagal memuat hasil pencarian: ${response.statusCode}');
+        throw Exception(
+          'Gagal memuat hasil pencarian: Server tidak merespons dengan benar (${response.statusCode})',
+        );
       }
     } catch (e) {
       if (e is SocketException) {
-        throw Exception('Tidak ada koneksi internet');
+        throw Exception(
+          'Tidak ada koneksi internet. Silakan periksa koneksi Anda dan coba lagi.',
+        );
+      } else if (e is HttpException) {
+        throw Exception(
+          'Tidak dapat menemukan layanan. Silakan coba lagi nanti.',
+        );
+      } else if (e is FormatException) {
+        throw Exception('Format data tidak valid. Silakan coba lagi nanti.');
+      } else if (e is TimeoutException) {
+        throw Exception('Waktu koneksi habis. Silakan coba lagi nanti.');
       }
       rethrow;
     }
@@ -71,11 +108,23 @@ class RestaurantApiService {
       if (response.statusCode == 201) {
         return ReviewResponse.fromJson(jsonDecode(response.body));
       } else {
-        throw Exception('Gagal mengirim review: ${response.statusCode}');
+        throw Exception(
+          'Gagal mengirim ulasan: Server tidak merespons dengan benar (${response.statusCode})',
+        );
       }
     } catch (e) {
       if (e is SocketException) {
-        throw Exception('Tidak ada koneksi internet');
+        throw Exception(
+          'Tidak ada koneksi internet. Silakan periksa koneksi Anda dan coba lagi.',
+        );
+      } else if (e is HttpException) {
+        throw Exception(
+          'Tidak dapat menemukan layanan. Silakan coba lagi nanti.',
+        );
+      } else if (e is FormatException) {
+        throw Exception('Format data tidak valid. Silakan coba lagi nanti.');
+      } else if (e is TimeoutException) {
+        throw Exception('Waktu koneksi habis. Silakan coba lagi nanti.');
       }
       rethrow;
     }
