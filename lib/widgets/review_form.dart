@@ -19,7 +19,7 @@ class ReviewForm extends StatelessWidget {
     final formKey = GlobalKey<FormState>();
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8.0),
       elevation: 2,
       shadowColor: Colors.black.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -29,6 +29,7 @@ class ReviewForm extends StatelessWidget {
           key: formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Tambahkan Review',

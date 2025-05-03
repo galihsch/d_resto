@@ -60,34 +60,40 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Consumer<RestaurantProvider>(
-        builder: (context, provider, _) {
-          final state = provider.restaurantDetailState;
+    return WillPopScope(
+      onWillPop: () async {
+        // Membersihkan resources sebelum kembali
+        return true;
+      },
+      child: Scaffold(
+        body: Consumer<RestaurantProvider>(
+          builder: (context, provider, _) {
+            final state = provider.restaurantDetailState;
 
-          return switch (state) {
-            ApiLoadingState() => const LoadingIndicator(
-              message: 'Memuat detail restoran...',
-            ),
-            ApiLoadedState<RestaurantDetail>() => _buildDetailContent(
-              state.data.restaurant,
-              provider,
-            ),
-            ApiErrorState() => Scaffold(
-              appBar: AppBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                systemOverlayStyle: SystemUiOverlayStyle.light,
+            return switch (state) {
+              ApiLoadingState() => const LoadingIndicator(
+                message: 'Memuat detail restoran...',
               ),
-              body: ErrorIndicator(
-                message: state.message,
-                onRetry: () {
-                  provider.fetchRestaurantDetail(widget.id);
-                },
+              ApiLoadedState<RestaurantDetail>() => _buildDetailContent(
+                state.data.restaurant,
+                provider,
               ),
-            ),
-          };
-        },
+              ApiErrorState() => Scaffold(
+                appBar: AppBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  systemOverlayStyle: SystemUiOverlayStyle.light,
+                ),
+                body: ErrorIndicator(
+                  message: state.message,
+                  onRetry: () {
+                    provider.fetchRestaurantDetail(widget.id);
+                  },
+                ),
+              ),
+            };
+          },
+        ),
       ),
     );
   }
@@ -96,74 +102,77 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
     RestaurantDetailItem restaurant,
     RestaurantProvider provider,
   ) {
-    return CustomScrollView(
-      slivers: [
-        _buildAppBar(restaurant),
-        SliverToBoxAdapter(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
+    return SafeArea(
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          _buildAppBar(restaurant),
+          SliverToBoxAdapter(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              margin: const EdgeInsets.only(top: 30),
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Restaurant details
-                  _buildRestaurantInfo(restaurant),
-                  const Divider(height: 32),
+                margin: const EdgeInsets.only(top: 30),
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Restaurant details
+                    _buildRestaurantInfo(restaurant),
+                    const Divider(height: 32),
 
-                  // Restaurant description
-                  _buildSectionTitle('Deskripsi'),
-                  const SizedBox(height: 8),
-                  Text(
-                    restaurant.description,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    textAlign: TextAlign.justify,
-                  ),
-                  const SizedBox(height: 24),
+                    // Restaurant description
+                    _buildSectionTitle('Deskripsi'),
+                    const SizedBox(height: 8),
+                    Text(
+                      restaurant.description,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.justify,
+                    ),
+                    const SizedBox(height: 24),
 
-                  // Restaurant categories
-                  _buildSectionTitle('Kategori'),
-                  const SizedBox(height: 12),
-                  _buildCategoriesList(restaurant.categories),
-                  const SizedBox(height: 24),
+                    // Restaurant categories
+                    _buildSectionTitle('Kategori'),
+                    const SizedBox(height: 12),
+                    _buildCategoriesList(restaurant.categories),
+                    const SizedBox(height: 24),
 
-                  // Restaurant menus
-                  _buildSectionTitle('Menu'),
-                  const SizedBox(height: 12),
-                  _buildMenus(restaurant.menus),
-                  const SizedBox(height: 24),
+                    // Restaurant menus
+                    _buildSectionTitle('Menu'),
+                    const SizedBox(height: 12),
+                    _buildMenus(restaurant.menus),
+                    const SizedBox(height: 24),
 
-                  // Customer reviews
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [_buildSectionTitle('Ulasan')],
-                  ),
-                  const SizedBox(height: 12),
-                  _buildReviewsSection(
-                    restaurant.id,
-                    restaurant.customerReviews,
-                  ),
-                ],
+                    // Customer reviews
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [_buildSectionTitle('Ulasan')],
+                    ),
+                    const SizedBox(height: 12),
+                    _buildReviewsSection(
+                      restaurant.id,
+                      restaurant.customerReviews,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -434,6 +443,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         // Add review form
         ReviewForm(restaurantId: restaurantId),
@@ -451,6 +461,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
         if (reviews.isEmpty)
           Center(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Lottie.asset(
                   'assets/animations/empty_box.json',
@@ -470,6 +481,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
             itemCount: reviews.length,
             itemBuilder: (context, index) {
               final review = reviews[index];
@@ -484,8 +496,8 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color:
             isDarkMode
@@ -496,12 +508,13 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
@@ -519,10 +532,11 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
                   ),
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       review.name,
@@ -541,7 +555,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Text(review.review, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
