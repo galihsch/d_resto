@@ -4,6 +4,10 @@ import 'package:provider/provider.dart';
 import 'data/api/api_service.dart';
 import 'providers/restaurant_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/review_form_provider.dart';
+import 'providers/search_provider.dart';
+import 'providers/ui_provider.dart';
+import 'providers/scroll_provider.dart';
 import 'screens/restaurant_list_screen.dart';
 import 'themes/app_theme.dart';
 
@@ -40,6 +44,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => RestaurantProvider(apiService: ApiService()),
         ),
+        ChangeNotifierProvider(create: (_) => ReviewFormProvider()),
+        ChangeNotifierProvider(create: (_) => SearchProvider()),
+        ChangeNotifierProvider(create: (_) => UIProvider()),
+        ChangeNotifierProvider(create: (_) => ScrollProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {

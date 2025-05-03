@@ -4,6 +4,7 @@ import '../data/api/api_state.dart';
 import '../data/models/restaurant.dart';
 import '../providers/restaurant_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/scroll_provider.dart';
 import '../widgets/loading_indicator.dart';
 import '../widgets/error_indicator.dart';
 import '../widgets/restaurant_card.dart';
@@ -18,13 +19,9 @@ class RestaurantListScreen extends StatefulWidget {
 }
 
 class _RestaurantListScreenState extends State<RestaurantListScreen> {
-  final ScrollController _scrollController = ScrollController();
-  bool _isScrolled = false;
-
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_scrollListener);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<RestaurantProvider>(
         context,
@@ -34,37 +31,23 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
   }
 
   @override
-  void dispose() {
-    _scrollController.removeListener(_scrollListener);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _scrollListener() {
-    if (_scrollController.offset > 20 && !_isScrolled) {
-      setState(() => _isScrolled = true);
-    } else if (_scrollController.offset <= 20 && _isScrolled) {
-      setState(() => _isScrolled = false);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final scrollProvider = Provider.of<ScrollProvider>(context);
 
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.grey[50],
       body: NestedScrollView(
-        controller: _scrollController,
+        controller: scrollProvider.scrollController,
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
               expandedHeight: 180.0,
               floating: false,
               pinned: true,
-              elevation: _isScrolled ? 4 : 0,
+              elevation: scrollProvider.isScrolled ? 4 : 0,
               backgroundColor:
-                  _isScrolled
+                  scrollProvider.isScrolled
                       ? Theme.of(context).colorScheme.primary
                       : Colors.transparent,
               flexibleSpace: FlexibleSpaceBar(
@@ -73,7 +56,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                   'D\'Resto',
                   style: TextStyle(
                     color:
-                        _isScrolled
+                        scrollProvider.isScrolled
                             ? (isDarkMode ? Colors.white : Colors.black87)
                             : Colors.transparent,
                     fontWeight: FontWeight.bold,
@@ -145,7 +128,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                   icon: Icon(
                     Icons.search,
                     color:
-                        _isScrolled
+                        scrollProvider.isScrolled
                             ? (isDarkMode ? Colors.white : Colors.black87)
                             : Colors.white,
                   ),
@@ -164,7 +147,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                         ? Icons.light_mode
                         : Icons.dark_mode,
                     color:
-                        _isScrolled
+                        scrollProvider.isScrolled
                             ? (isDarkMode ? Colors.white : Colors.black87)
                             : Colors.white,
                   ),

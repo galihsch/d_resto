@@ -12,6 +12,7 @@ import '../data/models/restaurant.dart';
 import '../providers/restaurant_provider.dart';
 import '../widgets/error_indicator.dart';
 import '../widgets/loading_indicator.dart';
+import '../widgets/review_form.dart';
 
 class RestaurantDetailScreen extends StatefulWidget {
   final String id;
@@ -150,10 +151,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
                   // Customer reviews
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildSectionTitle('Ulasan'),
-                      _buildAddReviewButton(restaurant.id, provider),
-                    ],
+                    children: [_buildSectionTitle('Ulasan')],
                   ),
                   const SizedBox(height: 12),
                   _buildReviewsSection(
@@ -430,22 +428,6 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
     );
   }
 
-  Widget _buildAddReviewButton(
-    String restaurantId,
-    RestaurantProvider provider,
-  ) {
-    return ElevatedButton.icon(
-      onPressed: () => _showReviewDialog(restaurantId, provider),
-      icon: const Icon(Icons.rate_review),
-      label: const Text('Tambah Ulasan'),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-
   Widget _buildReviewsSection(
     String restaurantId,
     List<CustomerReview> reviews,
@@ -453,6 +435,19 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Add review form
+        ReviewForm(restaurantId: restaurantId),
+        const SizedBox(height: 16),
+
+        // Review list title
+        Text(
+          'Semua Ulasan (${reviews.length})',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+
         if (reviews.isEmpty)
           Center(
             child: Column(
@@ -474,7 +469,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
         else
           ListView.builder(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             itemCount: reviews.length,
             itemBuilder: (context, index) {
               final review = reviews[index];
@@ -550,107 +545,6 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen>
           Text(review.review, style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
-    );
-  }
-
-  void _showReviewDialog(String restaurantId, RestaurantProvider provider) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                child: const Icon(Icons.person, color: Colors.white),
-              ),
-              const SizedBox(width: 8),
-              const Text('Tambah Ulasan'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nama',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
-                  prefixIcon: Icon(Icons.person),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _reviewController,
-                decoration: const InputDecoration(
-                  labelText: 'Ulasan',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                  ),
-                  prefixIcon: Icon(Icons.comment),
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 3,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (_nameController.text.isNotEmpty &&
-                    _reviewController.text.isNotEmpty) {
-                  await provider.addReview(
-                    id: restaurantId,
-                    name: _nameController.text,
-                    review: _reviewController.text,
-                  );
-
-                  // Clear text fields
-                  _nameController.clear();
-                  _reviewController.clear();
-
-                  if (mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Ulasan berhasil ditambahkan'),
-                        backgroundColor: Colors.green,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Nama dan ulasan harus diisi'),
-                      backgroundColor: Colors.red,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Kirim'),
-            ),
-          ],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        );
-      },
     );
   }
 }

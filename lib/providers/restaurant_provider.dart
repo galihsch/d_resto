@@ -81,4 +81,50 @@ class RestaurantProvider extends ChangeNotifier {
       // Handle error if needed
     }
   }
+
+  Future<void> postReview({
+    required String id,
+    required String name,
+    required String review,
+  }) async {
+    try {
+      // We don't need to set loading state here as we don't want to replace the current detail view
+      final reviewResponse = await apiService.addReview(
+        id: id,
+        name: name,
+        review: review,
+      );
+
+      // Only update the state if the current state is the detail we're updating
+      if (_restaurantDetailState is ApiLoadedState<RestaurantDetail>) {
+        final currentState =
+            _restaurantDetailState as ApiLoadedState<RestaurantDetail>;
+        final updatedRestaurant = RestaurantDetailItem(
+          id: currentState.data.restaurant.id,
+          name: currentState.data.restaurant.name,
+          description: currentState.data.restaurant.description,
+          city: currentState.data.restaurant.city,
+          address: currentState.data.restaurant.address,
+          pictureId: currentState.data.restaurant.pictureId,
+          categories: currentState.data.restaurant.categories,
+          menus: currentState.data.restaurant.menus,
+          rating: currentState.data.restaurant.rating,
+          customerReviews: reviewResponse.customerReviews,
+        );
+
+        _restaurantDetailState = ApiLoadedState<RestaurantDetail>(
+          RestaurantDetail(
+            error: false,
+            message: 'Success',
+            restaurant: updatedRestaurant,
+          ),
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      // We could set an error state here, but for UX reasons we'll just return the error
+      // so the UI can show a snackbar without disrupting the current view
+      rethrow;
+    }
+  }
 }

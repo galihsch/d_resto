@@ -1,176 +1,124 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/restaurant_provider.dart';
+import '../providers/review_form_provider.dart';
 
-class ReviewForm extends StatefulWidget {
+class ReviewForm extends StatelessWidget {
   final String restaurantId;
 
   const ReviewForm({super.key, required this.restaurantId});
 
   @override
-  State<ReviewForm> createState() => _ReviewFormState();
-}
-
-class _ReviewFormState extends State<ReviewForm> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _reviewController = TextEditingController();
-  bool _isSubmitting = false;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _reviewController.dispose();
-    super.dispose();
-  }
-
-  void _submitReview() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isSubmitting = true;
-      });
-
-      try {
-        await Provider.of<RestaurantProvider>(context, listen: false).addReview(
-          id: widget.restaurantId,
-          name: _nameController.text.trim(),
-          review: _reviewController.text.trim(),
-        );
-
-        if (mounted) {
-          setState(() {
-            _isSubmitting = false;
-          });
-
-          _nameController.clear();
-          _reviewController.clear();
-
-          // Show success snackbar
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Ulasan berhasil ditambahkan!'),
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              margin: EdgeInsets.all(16),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() {
-            _isSubmitting = false;
-          });
-
-          // Show error snackbar
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Gagal menambahkan ulasan. Silakan coba lagi.'),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              margin: EdgeInsets.all(16),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final formProvider = Provider.of<ReviewFormProvider>(context);
+    final restaurantProvider = Provider.of<RestaurantProvider>(
+      context,
+      listen: false,
+    );
+    final formKey = GlobalKey<FormState>();
 
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 300),
-      decoration: BoxDecoration(
-        color: isDarkMode ? Theme.of(context).cardTheme.color : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.all(16),
-      margin: EdgeInsets.only(bottom: 16),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Tambahkan Ulasan',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      elevation: 2,
+      shadowColor: Colors.black.withOpacity(0.1),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Tambahkan Review',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-            ),
-            SizedBox(height: 16),
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: 'Nama',
-                prefixIcon: Icon(Icons.person_outline),
-                hintText: 'Masukkan nama Anda',
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: formProvider.nameController,
+                decoration: InputDecoration(
+                  labelText: 'Nama',
+                  hintText: 'Masukkan nama Anda',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.person),
+                  filled: true,
+                  fillColor:
+                      isDarkMode ? Colors.grey.shade800 : Colors.grey.shade100,
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Nama tidak boleh kosong';
+                  }
+                  return null;
+                },
               ),
-              textInputAction: TextInputAction.next,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Nama tidak boleh kosong';
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 16),
-            TextFormField(
-              controller: _reviewController,
-              decoration: InputDecoration(
-                labelText: 'Ulasan',
-                prefixIcon: Icon(Icons.rate_review_outlined),
-                hintText: 'Bagikan pengalaman Anda',
-                alignLabelWithHint: true,
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: formProvider.reviewController,
+                decoration: InputDecoration(
+                  labelText: 'Review',
+                  hintText: 'Bagikan pengalaman Anda',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.comment),
+                  filled: true,
+                  fillColor:
+                      isDarkMode ? Colors.grey.shade800 : Colors.grey.shade100,
+                ),
+                maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Review tidak boleh kosong';
+                  }
+                  return null;
+                },
               ),
-              maxLines: 3,
-              textInputAction: TextInputAction.done,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Ulasan tidak boleh kosong';
-                }
-                return null;
-              },
-            ),
-            SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _isSubmitting ? null : _submitReview,
-              icon:
-                  _isSubmitting
-                      ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                      : Icon(Icons.send_rounded),
-              label: Text(_isSubmitting ? 'Mengirim...' : 'Kirim Ulasan'),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed:
+                      formProvider.isSubmitting
+                          ? null
+                          : () {
+                            if (formKey.currentState?.validate() ?? false) {
+                              formProvider.submitReview(
+                                restaurantId: restaurantId,
+                                restaurantProvider: restaurantProvider,
+                                context: context,
+                              );
+                            }
+                          },
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child:
+                      formProvider.isSubmitting
+                          ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : const Text(
+                            'Kirim Review',
+                            style: TextStyle(fontSize: 16),
+                          ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

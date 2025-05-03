@@ -4,6 +4,7 @@ import 'package:lottie/lottie.dart';
 import '../data/api/api_state.dart';
 import '../data/models/restaurant.dart';
 import '../providers/restaurant_provider.dart';
+import '../providers/search_provider.dart';
 import '../widgets/error_indicator.dart';
 import '../widgets/loading_indicator.dart';
 import '../widgets/restaurant_card.dart';
@@ -18,13 +19,12 @@ class RestaurantSearchScreen extends StatefulWidget {
 
 class _RestaurantSearchScreenState extends State<RestaurantSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  bool _isInitialState = true;
 
   @override
   void initState() {
     super.initState();
-    // Setel state ke initial true
-    _isInitialState = true;
+    // Reset search state
+    Provider.of<SearchProvider>(context, listen: false).resetSearch();
   }
 
   @override
@@ -36,6 +36,7 @@ class _RestaurantSearchScreenState extends State<RestaurantSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final searchProvider = Provider.of<SearchProvider>(context, listen: false);
 
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.grey[50],
@@ -81,18 +82,13 @@ class _RestaurantSearchScreenState extends State<RestaurantSearchScreen> {
                   icon: const Icon(Icons.clear, color: Colors.white),
                   onPressed: () {
                     _searchController.clear();
-                    // Tidak perlu memicu searchRestaurants lagi
-                    setState(() {
-                      _isInitialState = true;
-                    });
+                    searchProvider.resetSearch();
                   },
                 ),
               ),
               onChanged: (value) {
-                if (_isInitialState) {
-                  setState(() {
-                    _isInitialState = false;
-                  });
+                if (searchProvider.isInitialState) {
+                  searchProvider.setSearchState(false);
                 }
                 Provider.of<RestaurantProvider>(
                   context,
@@ -106,31 +102,30 @@ class _RestaurantSearchScreenState extends State<RestaurantSearchScreen> {
               decoration: BoxDecoration(
                 color: isDarkMode ? const Color(0xFF121212) : Colors.white,
               ),
-              child:
-                  _isInitialState
-                      ? _buildEmptySearchState(
-                        animation: 'assets/animations/search.json',
-                        title: 'Ketik untuk mencari restoran',
-                        subtitle: 'Cari berdasarkan nama, kategori, atau menu',
-                      )
-                      : Consumer<RestaurantProvider>(
-                        builder: (context, provider, _) {
-                          final state = provider.searchState;
-                          return switch (state) {
-                            ApiLoadingState() => const LoadingIndicator(
-                              message: 'Mencari restoran...',
-                            ),
-                            ApiLoadedState<SearchRestaurant>() =>
-                              _buildSearchResults(
-                                state.data.restaurants,
-                                state.data.founded,
-                              ),
-                            ApiErrorState() => ErrorIndicator(
-                              message: state.message,
-                            ),
-                          };
-                        },
-                      ),
+              child: Consumer2<SearchProvider, RestaurantProvider>(
+                builder: (context, searchProvider, restaurantProvider, _) {
+                  if (searchProvider.isInitialState) {
+                    return _buildEmptySearchState(
+                      animation: 'assets/animations/search.json',
+                      title: 'Ketik untuk mencari restoran',
+                      subtitle: 'Cari berdasarkan nama, kategori, atau menu',
+                    );
+                  }
+
+                  final state = restaurantProvider.searchState;
+                  return switch (state) {
+                    ApiLoadingState() => const LoadingIndicator(
+                      message: 'Mencari restoran...',
+                    ),
+                    ApiLoadedState<SearchRestaurant>() => _buildSearchResults(
+                      state.data.restaurants,
+                      state.data.founded,
+                      _searchController.text,
+                    ),
+                    ApiErrorState() => ErrorIndicator(message: state.message),
+                  };
+                },
+              ),
             ),
           ),
         ],
@@ -138,8 +133,12 @@ class _RestaurantSearchScreenState extends State<RestaurantSearchScreen> {
     );
   }
 
-  Widget _buildSearchResults(List<Restaurant> restaurants, int count) {
-    if (_searchController.text.isEmpty) {
+  Widget _buildSearchResults(
+    List<Restaurant> restaurants,
+    int count,
+    String query,
+  ) {
+    if (query.isEmpty) {
       return _buildEmptySearchState(
         animation: 'assets/animations/search.json',
         title: 'Ketik untuk mencari restoran',
